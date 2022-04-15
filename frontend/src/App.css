@@ -1,9 +1,12 @@
 :root {
-  --green: #1b5e1f;
-  --green-selected: #2e7d31;
-  --white: #E8E5DA;
-  --black: #14080E; 
-  --text: white;
+  --primary: #2c363f;
+  --primary-light: #55606a;
+  --primary-dark: #021019;
+  --secondary: #e75a7b;
+  --secondary-light: #ff8caa;
+  --secondary-dark: #b0244f;
+  --text-on-p: #ffffff;
+  --text-on-s: #000000;
 }
 
 .App {
@@ -14,17 +17,15 @@
   grid-template-columns: 20vw auto;
   grid-template-rows: 70px auto;
   height: 100vh;
-  color: white;
+  color: var(--text-on-p);
 }
-
-
 
 header {
   grid-area: header;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: var(--green);
+  background-color: var(--primary);
   font-size: calc(10px + 2vmin);
   padding-right: 1vw;
 }
@@ -50,8 +51,7 @@ aside {
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
-  /* background-image: linear-gradient(to bottom right, #43b692, #099773); */
-  background-color: var(--green);
+  background-color: var(--primary);
   max-height: 100vh;
 }
 
@@ -71,7 +71,7 @@ input[type=text] {
   border: 0;
   padding: 5px;
   padding-left: 20px;
-  background-color: var(--text);
+  background-color: white;
 }
 
 .TurtleList::-webkit-scrollbar {
@@ -81,7 +81,7 @@ input[type=text] {
 .TurtleList {
   align-self: stretch;
   max-height: inherit;
-  color: var(--text);
+  color: var(--text-on-p);
   overflow-y: scroll;
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -98,8 +98,8 @@ input[type=text] {
 }
 
 .selected {
-  background-color: var(--green-selected);
-  /* background-image: linear-gradient(to bottom right, #0b3866, #95f9c3); */
+  background-color: var(--secondary);
+  color: var(--text-on-s);
 }
 
 main {
@@ -131,8 +131,7 @@ button {
   border: none;
   width: 100px;
   height: 100px;
-  color: black;
-  
+  color: black; 
 }
 
 button:hover {
