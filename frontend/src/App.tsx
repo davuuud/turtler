@@ -80,13 +80,8 @@ function App() {
         // console.log(msg)
         switch (msg.type) {
           case "full":
-            if (msg.turtles.length > 0) {
-              setTurtles(msg.turtles)
-              setCurr(msg.turtles.find((t: Turtle) => t.id === curr.id) || EMPTY_TURTLE)
-            } else {
-              setTurtles([])
-              setCurr(EMPTY_TURTLE)
-            }
+            setTurtles(msg.turtles)
+            setCurr(msg.turtles.find((t: Turtle) => t.id === curr.id) || EMPTY_TURTLE)
             break
 
           case "hi":
