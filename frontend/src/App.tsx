@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import logo from './logo.svg'
+import { ChangeEventHandler, useEffect, useState } from 'react'
+import logo from './logo.png'
 import './App.css'
 
 type Turtle = {id: number, name: string}
@@ -22,38 +22,41 @@ function Display() {
   return <canvas id="canvas"></canvas>
 }
 
-function Searchbar() {
-  return (
-    <div className="Searchbar">
-      <input type="text" />
-    </div>
-  )
-}
-
 function TurtleEntry(props: any) {
   const handleSelect = () => {
     props.onSelect(props.turtle)
   }
 
-  if (props.isSelected) {
-    return <div className="TurtleEntry selected">{props.turtle.name}</div>
-  } else {
-    return <div className="TurtleEntry" onClick={handleSelect}>{props.turtle.name}</div>
-  }
+  return (props.isSelected) ? 
+    <div className="TurtleEntry selected">{props.turtle.name}</div> :
+    <div className="TurtleEntry" onClick={handleSelect}>{props.turtle.name}</div>
 }
 
 function TurtleSelector(props: any) {
+  const [filter, setFilter] = useState("")
+
+  const handleFilterTextChange = (e: any) => {
+    setFilter(e.target.value)
+  }
+
   const list = props.turtles.map(
-    (t: Turtle) => <TurtleEntry
-                    key={t.id}
-                    turtle={t}
-                    isSelected={t === props.curr}
-                    onSelect={props.onSelect} />
-  )
+    (t: Turtle) => {
+      if (t.name.indexOf(filter) === -1) return
+      return <TurtleEntry
+              key={t.id}
+              turtle={t}
+              isSelected={t === props.curr}
+              onSelect={props.onSelect} />
+    })
 
   return (
     <aside>
-      <Searchbar />
+      <div className="Searchbar">
+        <input type="text"
+          placeholder="Filter"
+          value={filter}
+          onChange={handleFilterTextChange} />
+      </div>
       <div className="TurtleList">
         {list}
       </div>
@@ -108,7 +111,7 @@ function App() {
   return (
     <div className="App">
       <header>
-        Icon
+        Logo
         <nav>Nav</nav>
       </header>
       <TurtleSelector
