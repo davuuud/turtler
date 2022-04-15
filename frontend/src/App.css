@@ -5,8 +5,10 @@
   --secondary: #e75a7b;
   --secondary-light: #ff8caa;
   --secondary-dark: #b0244f;
-  --text-on-p: #ffffff;
-  --text-on-s: #000000;
+  --text-on-p: rgba(255, 255, 255, 0.87);
+  --text-on-p-large: rgba(255, 255, 255, 0.90);
+  --text-on-s: rgba(0, 0, 0, 0.87);
+  --text-on-s-large: rgba(0, 0, 0, 0.90);
 }
 
 .App {
@@ -26,6 +28,7 @@ header {
   justify-content: space-between;
   align-items: center;
   background-color: var(--primary);
+  color: var(--text-on-p);
   font-size: calc(10px + 2vmin);
   padding-right: 1vw;
 }
@@ -35,6 +38,7 @@ header {
   justify-content: flex-start;
   align-items: center;
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  color: var(--text-on-p-large);
 }
 
 .App-logo {
@@ -97,7 +101,16 @@ input[type=text] {
   padding-right: 1em;
 }
 
+.TurtleEntry:hover {
+  background-color: var(--primary-light);
+}
+
 .selected {
+  background-color: var(--secondary);
+  color: var(--text-on-s);
+}
+
+.selected:hover {
   background-color: var(--secondary);
   color: var(--text-on-s);
 }
@@ -127,14 +140,15 @@ main {
 button {
   box-sizing: border-box;
   font-size: calc(10px + 2vmin);
-  background-color: #e7e7e7;
+  background-color: var(--secondary);
   border: none;
   width: 100px;
   height: 100px;
-  color: black; 
+  color: var(--text-on-s-large);
+  border-radius: 25px;
 }
 
 button:hover {
-  background-color: white;
-  border: 2px solid #e7e7e7;
+  background-color: var(--secondary-light);
+  border: 0;
 }
