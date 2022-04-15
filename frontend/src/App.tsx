@@ -41,7 +41,7 @@ function TurtleSelector(props: any) {
 
   const list = props.turtles.map(
     (t: Turtle) => {
-      if (t.name.indexOf(filter) === -1) return
+      if (t.name.indexOf(filter) === -1 && t.id !== props.curr.id) return
       return <TurtleEntry
               key={t.id}
               turtle={t}
@@ -111,8 +111,8 @@ function App() {
   return (
     <div className="App">
       <header>
-        Logo
-        <nav>Nav</nav>
+        <div className="Logobox"><img className="App-logo" src={logo} alt="Logo" />Turtler</div>
+        <nav>xd</nav>
       </header>
       <TurtleSelector
         turtles={turtles}

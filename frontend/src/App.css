@@ -17,10 +17,7 @@
   color: white;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
+
 
 header {
   grid-area: header;
@@ -29,8 +26,20 @@ header {
   align-items: center;
   background-color: var(--green);
   font-size: calc(10px + 2vmin);
-  padding-left: 1vw;
   padding-right: 1vw;
+}
+
+.Logobox {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.App-logo {
+  height: 70px;
+  padding-right: 10px;
+  pointer-events: none;
 }
 
 nav {}
