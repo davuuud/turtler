@@ -89,7 +89,7 @@ input[type=text] {
 
 .TurtleEntry {
   min-height: 7vh;
-  font-size: 1.35em;
+  font-size: calc(10px + 1vmin);
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -109,11 +109,33 @@ main {
 
 .ControlPanel {
   position: absolute;
-  left: 10px;
+  left: 0;
+  right: 0;
   bottom: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.UpDown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 button {
+  box-sizing: border-box;
   font-size: calc(10px + 2vmin);
+  background-color: #e7e7e7;
+  border: none;
+  width: 100px;
+  height: 100px;
+  color: black;
+  
 }
 
+button:hover {
+  background-color: white;
+  border: 2px solid #e7e7e7;
+}

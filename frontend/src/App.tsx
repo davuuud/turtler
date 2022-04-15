@@ -1,6 +1,8 @@
 import { ChangeEventHandler, useEffect, useState } from 'react'
 import logo from './logo.png'
 import './App.css'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowLeftRotate, faArrowLeft, faArrowUp, faArrowDown, faArrowRight, faArrowRightRotate } from '@fortawesome/free-solid-svg-icons'
 
 type Turtle = {id: number, name: string}
 const EMPTY_TURTLE: Turtle = {id: 0, name: ""}
@@ -8,12 +10,14 @@ const EMPTY_TURTLE: Turtle = {id: 0, name: ""}
 function ControlPanel() {
   return (
     <div className="ControlPanel">
-      <button>Turn left</button>
-      <button>Left</button>
-      <button>Up</button>
-      <button>Down</button>
-      <button>Right</button>
-      <button>Turn right</button>
+      <button><FontAwesomeIcon icon={faArrowLeftRotate}></FontAwesomeIcon></button>
+      <button><FontAwesomeIcon icon={faArrowLeft}></FontAwesomeIcon></button>
+      <div className="UpDown">
+        <button><FontAwesomeIcon icon={faArrowUp}></FontAwesomeIcon></button>
+        <button><FontAwesomeIcon icon={faArrowDown}></FontAwesomeIcon></button>
+      </div>
+      <button><FontAwesomeIcon icon={faArrowRight}></FontAwesomeIcon></button>
+      <button><FontAwesomeIcon icon={faArrowRightRotate}></FontAwesomeIcon></button>
     </div>
   )
 }
