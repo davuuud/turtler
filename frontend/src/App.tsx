@@ -1,4 +1,4 @@
-import { ChangeEventHandler, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import logo from './logo.png'
 import './App.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -23,6 +23,7 @@ function ControlPanel() {
 }
 
 function Display() {
+
   return <canvas id="canvas"></canvas>
 }
 

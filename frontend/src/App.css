@@ -150,5 +150,4 @@ button {
 
 button:hover {
   background-color: var(--secondary-light);
-  border: 0;
 }
