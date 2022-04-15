@@ -54,7 +54,11 @@ input[type=text] {
   background-color: var(--white);
 }
 
-.TurtleEntry {}
+.TurtleEntry {
+  margin: 10px;
+  background-color: var(--accent-background-col);
+  min-height: 7vh;
+}
 
 main {
   grid-area: main;

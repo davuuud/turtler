@@ -3,8 +3,8 @@ const app = express();
 const expressWs = require('express-ws')(app);
 const port = 8080;
 
-let turtles = new Set([{id: 1, name: "a"}, {id: 2, name: "b"}])
-let altTurtles = new Set([{id: 2, name: "b"}, {id: 3, name:"c"}, {id: 4, name:"d"}])
+let turtles = [{id: 1, name: "a"}, {id: 2, name: "b"}]
+let altTurtles = [{id: 2, name: "b"}, {id: 3, name:"c"}, {id: 4, name:"d"}]
 
 app.ws("/", (ws, req) => {
   console.log("Irgendein Hirt ist jetzt a dabei");
@@ -15,10 +15,11 @@ app.ws("/", (ws, req) => {
         const parsedMessage = JSON.parse(msg);
         console.log(parsedMessage);
         if (parsedMessage.type === "get") {
-            ws.send(JSON.stringify({type: "full", turtles: [...turtles]}))
-            //ws.send(JSON.stringify({type: "hi", turtle: {id: 3, name:"c"}}))
-            //ws.send(JSON.stringify({type: "full", turtles: [...altTurtles]}))
-            ws.send(JSON.stringify({type: "hi", turtle: {id: 2, name:"b"}}))
+            ws.send(JSON.stringify({type: "full", turtles: turtles}))
+            ws.send(JSON.stringify({type: "hi", turtle: {id: 3, name: "c"}}))
+            //ws.send(JSON.stringify({type: "full", turtles: altTurtles}))
+            ws.send(JSON.stringify({type: "hi", turtle: {id: 4, name: "d"}}))
+            //ws.send(JSON.stringify({type: "bye", turtle: {id: 3, name:"c"}}))
         }
     } catch {}
   });
