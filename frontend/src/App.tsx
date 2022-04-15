@@ -54,7 +54,9 @@ function TurtleSelector(props: any) {
   return (
     <aside>
       <Searchbar />
-      {list}
+      <div className="TurtleList">
+        {list}
+      </div>
     </aside>
     
   )
