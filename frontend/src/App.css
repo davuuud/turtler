@@ -42,7 +42,7 @@ header {
   pointer-events: none;
 }
 
-nav {}
+/* nav {} */
 
 aside {
   grid-area: aside;
