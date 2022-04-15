@@ -37,12 +37,14 @@ header {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  /* font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; */
   color: var(--text-on-p-large);
 }
 
 .App-logo {
   height: 70px;
+  padding-left: 10px;
   padding-right: 10px;
   pointer-events: none;
 }
