@@ -3,6 +3,8 @@ import logo from './logo.png'
 import './App.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeftRotate, faArrowLeft, faArrowUp, faArrowDown, faArrowRight, faArrowRightRotate } from '@fortawesome/free-solid-svg-icons'
+import { Canvas } from '@react-three/fiber'
+import World from  './World'
 
 type Turtle = {id: number, name: string}
 const EMPTY_TURTLE: Turtle = {id: 0, name: ""}
@@ -22,9 +24,15 @@ function ControlPanel() {
   )
 }
 
-function Display() {
+function Display(props: any) {
 
-  return <canvas id="canvas"></canvas>
+  return (
+    <Canvas>
+      <ambientLight />
+      <pointLight position={[0, 0, 0]} />
+      <World blockList={props.blocks} />
+    </Canvas>
+  )
 }
 
 function TurtleEntry(props: any) {
@@ -66,7 +74,6 @@ function TurtleSelector(props: any) {
         {list}
       </div>
     </aside>
-    
   )
 }
 
@@ -85,7 +92,6 @@ function App() {
     socket.onmessage = event => {
       try {
         const msg = JSON.parse(event.data)
-        // console.log(msg)
         switch (msg.type) {
           case "full":
             setTurtles(msg.turtles)
