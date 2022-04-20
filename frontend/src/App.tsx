@@ -30,27 +30,19 @@ function Display(props: any) {
     <Canvas>
       <ambientLight />
       <pointLight position={[0, 0, 0]} />
-      <World blockList={props.blocks} />
+      <World requestChunk={props.requestChunk} blockList={props.blocks} />
     </Canvas>
   )
 }
 
 function TurtleEntry(props: any) {
-  const handleSelect = () => {
-    props.onSelect(props.turtle)
-  }
-
   return (props.isSelected) ? 
     <div className="TurtleEntry selected">{props.turtle.name}</div> :
-    <div className="TurtleEntry" onClick={handleSelect}>{props.turtle.name}</div>
+    <div className="TurtleEntry" onClick={() => props.onSelect(props.turtle)}>{props.turtle.name}</div>
 }
 
 function TurtleSelector(props: any) {
   const [filter, setFilter] = useState("")
-
-  const handleFilterTextChange = (e: any) => {
-    setFilter(e.target.value)
-  }
 
   const list = props.turtles.map(
     (t: Turtle) => {
@@ -68,7 +60,7 @@ function TurtleSelector(props: any) {
         <input type="text"
           placeholder="Filter"
           value={filter}
-          onChange={handleFilterTextChange} />
+          onChange={(e: any) => setFilter(e.target.value)} />
       </div>
       <div className="TurtleList">
         {list}
@@ -78,8 +70,10 @@ function TurtleSelector(props: any) {
 }
 
 function App() {
-  const [turtles, setTurtles] = useState<Turtle[]>([])
-  const [curr, setCurr] = useState<Turtle>(EMPTY_TURTLE)
+  const [socket, setSocket] = useState(null as unknown as WebSocket);
+  const [turtles, setTurtles] = useState<Turtle[]>([]);
+  const [curr, setCurr] = useState<Turtle>(EMPTY_TURTLE);
+  const [chunks, setChunks] = useState(null);
 
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8080")
@@ -108,15 +102,21 @@ function App() {
             setTurtles(prevState => prevState.filter(t => t.id !== msg.turtle.id))
             if (msg.turtle.id === curr.id) setCurr(EMPTY_TURTLE)
             break
+
+          case "chunk":
+            
         }
       } catch {}
     }
 
-    return () => socket.close()
+    setSocket(socket);
+
+    return () => { socket.close(); setSocket(null as unknown as WebSocket); }
   }, []);
 
   const currSelect = (turtle: Turtle) => {
     setCurr(turtle);
+    socket.send(JSON.stringify({type: "subscribe", value: turtle}));
   }
 
   return (
@@ -130,7 +130,7 @@ function App() {
         curr={curr}
         onSelect={currSelect} />
       <main>
-        <Display />
+        <Display chunks={chunks} />
         <ControlPanel />
       </main>
     </div>
