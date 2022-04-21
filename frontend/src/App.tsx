@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react'
 import logo from './logo.png'
 import './App.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -11,9 +11,19 @@ import Chunk from './Chunk'
 type Turtle = { id: number, name: string }
 const EMPTY_TURTLE: Turtle = { id: 0, name: "" }
 
-type Coordinate = { x: number, y: number, z: number};
+type Coordinate = [x: number, y: number, z: number];
 type RenderInfo = { turtlePos: Coordinate, chunks: Chunk[] };
-const EMPTY_RENDERINFO: RenderInfo = { turtlePos: {x: 0, y: 0, z: 0}, chunks: [] };
+const EMPTY_RENDERINFO: RenderInfo = { turtlePos: [0, 0, 0], chunks: [] };
+
+function addScalar(coord: Coordinate, scalar: number): Coordinate {
+  const [x, y, z] = coord;
+  return [x + scalar, y + scalar, z + scalar];
+}
+
+function mulScalar(coord: Coordinate, scalar: number): Coordinate {
+  const [x, y, z] = coord;
+  return [x * scalar, y * scalar, z * scalar];
+}
 
 function ControlPanel() {
   return (
@@ -30,9 +40,8 @@ function ControlPanel() {
   )
 }
 
-function Subchunk(props: any) {
-  const ref = useRef()
-  const { positions, normals, indices } = props.c.calcChunkGeometryData();
+function Subchunk(props: { chunk: Chunk, position: number[] }) {
+  const { positions, normals, indices } = props.chunk.calcChunkGeometryData();
   const geometry = new THREE.BufferGeometry();
   const material = new THREE.MeshLambertMaterial({ color: "green" });
 
@@ -52,15 +61,15 @@ function Subchunk(props: any) {
   geometry.setIndex(indices);
   
   return (
-      <mesh {...props.position} ref={ref} scale={1} geometry={geometry} material={material} />
+      <mesh {...props.position} scale={1} geometry={geometry} material={material} />
   )
 }
 
-function World(props: any) {
-  const chunkList = props.chunks.map((c: Chunk) => {
-    const ncp = normalize(props.turtleChunkPos, c.pos)
-    const position = [ncp.x, ncp.y, ncp.z];
-    return <Subchunk chunk={c} position={position} />
+function World({ turtleChunkPos, chunks }: { turtleChunkPos: Coordinate, chunks: Chunk[] }) {
+  const chunkList = chunks.map((c: Chunk, index: number) => {
+    const position = normalize(turtleChunkPos, c.pos)
+    const pos = mulScalar(position, 16);
+    return <Subchunk key={index} chunk={c} position={pos} />
   })
 
   return (
@@ -70,28 +79,29 @@ function World(props: any) {
   )
 }
 
-function Turtle(props: any) {
-  const ref = useRef()
-  
+
+
+function Turtle({ position }: { position: Coordinate }) {
   return (
-      <mesh {...props} ref={ref} scale={1}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color='yellow' />
-      </mesh>
+    <mesh visible position={position} scale={1}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color='yellow' />
+    </mesh>
   )
 }
 
 function Display({ renderinfo }: { renderinfo: RenderInfo }) {
-  const turtlePos = [renderinfo.turtlePos.x, renderinfo.turtlePos.y, renderinfo.turtlePos.z];
-  const turtleChunkPos = coordToChunk(renderinfo.turtlePos);
+  const { turtlePos, chunks } = renderinfo;
+  const pos = addScalar(turtlePos, 0.5);
+  const turtleChunkPos = coordToChunk(turtlePos);
 
   return (
     <Canvas>
       <ambientLight />
       <pointLight position={[0, 0, 0]} />
       <OrbitControls />
-      <Turtle position={turtlePos} />
-      <World turtleChunkPos={turtleChunkPos} chunks={renderinfo.chunks} />
+      <Turtle position={pos} />
+      <World turtleChunkPos={turtleChunkPos} chunks={chunks} />
     </Canvas>
   )
 }
@@ -130,16 +140,18 @@ function TurtleSelector(props: any) {
   )
 }
 
-function coordToChunk({x, y, z}: Coordinate): Coordinate {
-  return { x: (x >> 4), y: (y >> 4), z: (z >> 4) };
+function coordToChunk([x, y, z]: Coordinate): Coordinate {
+  return [(x >> 4), (y >> 4), (z >> 4)];
 }
 
 function normalize(ref: Coordinate, pos: Coordinate): Coordinate {
-  return { x: (pos.x - ref.x), y: (pos.y - ref.y), z: (pos.z - ref.z) }
+  const [refx, refy, refz] = ref;
+  const [posx, posy, posz] = ref;
+  return [(posx - refx), (posy - refy), (posz - refz)];
 }
 
 function getArrayLocation(turtlePos: Coordinate, chunkPos: Coordinate): number | undefined {
-  const {x, y, z} = normalize(coordToChunk(turtlePos), chunkPos);
+  const [x, y, z] = normalize(coordToChunk(turtlePos), chunkPos);
   if (x < -1 || 1 < x || 
     y < -1 || 1 < y || 
     z < -1 || 1 < z) return;
@@ -150,7 +162,7 @@ function reducer(state: any, action: { type: string; value: any }) {
   const { turtlePos, chunks, dir, pos, data } = action.value;
   const newChunks: Chunk[] = [];
   switch (action.type) {
-    case "full": /* Server Msg: { type: "fullchunkinfo", value: { turtlePos: {}, chunks: [] } */
+    case "full": /* Server Msg: { type: "fullchunkinfo", value: { turtlePos: [], chunks: [] } */
       for (let chunk of chunks) {
         const arrLoc = getArrayLocation(turtlePos, chunk.pos);
         if (arrLoc) newChunks[arrLoc] = new Chunk(chunk);
@@ -210,12 +222,12 @@ function reducer(state: any, action: { type: string; value: any }) {
       if (arrLoc) {
         const updatedChunks = state.chunks.slice(0);
         updatedChunks[arrLoc] = new Chunk({ pos, data });
-        return { turtlePos: state.turtlePos, chunks: updatedChunks }
+        return { ...state, chunks: updatedChunks }
       }
       return state
     
     default:
-      return state;
+      return new Error();
   }
 }
 
@@ -225,7 +237,8 @@ function requestMissingChunks(turtleChunkPos: Coordinate, chunks: Chunk[], socke
       for (let x = -1; x < 2; ++x) {
         const i = (y + 1) * 9 + (z + 1) * 3 + (x + 1);
         if (!chunks[i]) {
-          socket.send(JSON.stringify({ type: "get", value: "chunk", pos: { x: (turtleChunkPos.x + x), y: (turtleChunkPos.y + y), z: (turtleChunkPos.z + z) } }));
+          const [tx, ty, tz] = turtleChunkPos;
+          socket.send(JSON.stringify({ type: "get", value: "chunk", pos: [(tx + x), (ty + y), (tz + z)] }));
         }
       }
     }

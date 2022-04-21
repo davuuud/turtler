@@ -1,6 +1,6 @@
 type Face = { dir: number[], corners: number[][] }
 type Block = "grass" | "dirt" | "stone"
-type Coordinate = { x: number, y: number, z: number};
+type Coordinate = [x: number, y: number, z: number];
 type ChunkUpdate = { pos: Coordinate, data: [{ x: number, y: number, z: number, type: Block }] }
 
 function getBlockId(block: Block) {
@@ -43,7 +43,8 @@ class Chunk {
   }
 
   voxelInChunk(x: number, y: number, z: number) {
-    return (x >> 4) === this.pos.x && (y >> 4) === this.pos.y && (z >> 4) === this.pos.z;
+    const [px, py, pz] = this.pos;
+    return (x >> 4) === px && (y >> 4) === py && (z >> 4) === pz;
   }
 
   getVoxel(x: number, y: number, z: number) {
@@ -61,9 +62,10 @@ class Chunk {
     const positions = [];
     const normals = [];
     const indices = [];
-    const startX = this.pos.x * cellSize;
-    const startY = this.pos.y * cellSize;
-    const startZ = this.pos.z * cellSize;
+    const [px, py, pz] = this.pos;
+    const startX = px * cellSize;
+    const startY = py * cellSize;
+    const startZ = pz * cellSize;
 
     for (let y = 0; y < cellSize; y++) {
       const voxelY = startY + y;
