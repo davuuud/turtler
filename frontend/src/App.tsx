@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import logo from './logo.png'
 import './App.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeftRotate, faArrowLeft, faArrowUp, faArrowDown, faArrowRight, faArrowRightRotate } from '@fortawesome/free-solid-svg-icons'
 import { Canvas } from '@react-three/fiber'
-import World from  './World'
+import Chunk from './Chunk'
 
-type Turtle = {id: number, name: string}
-const EMPTY_TURTLE: Turtle = {id: 0, name: ""}
+type Turtle = { id: number, name: string }
+const EMPTY_TURTLE: Turtle = { id: 0, name: "" }
+
+type Coordinate = { x: number, y: number, z: number};
+type RenderInfo = { turtlePos: Coordinate, chunks: Chunk[] };
+const EMPTY_RENDERINFO: RenderInfo = { turtlePos: {x: 0, y: 0, z: 0}, chunks: [] };
 
 function ControlPanel() {
   return (
@@ -24,13 +28,34 @@ function ControlPanel() {
   )
 }
 
+function Chunkr(props: any) {
+  const ref = useRef()
+  
+  return (
+      <mesh {...props} ref={ref} scale={1}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color='hotpink' />
+      </mesh>
+  )
+}
+
+function World(props: any) {
+
+return (
+  <>
+    <Chunkr position={[1, 0, 0]} />
+    <Chunkr position={[-1, 0, 0]} />
+  </>
+)
+}
+
 function Display(props: any) {
 
   return (
     <Canvas>
       <ambientLight />
       <pointLight position={[0, 0, 0]} />
-      <World requestChunk={props.requestChunk} blockList={props.blocks} />
+      <World blockList={props.blocks} />
     </Canvas>
   )
 }
@@ -69,11 +94,60 @@ function TurtleSelector(props: any) {
   )
 }
 
+function coordToChunk({x, y, z}: Coordinate): Coordinate {
+  return { x: (x >> 4), y: (y >> 4), z: (z >> 4) };
+}
+
+function normalize(ref: Coordinate, pos: Coordinate): Coordinate {
+  return { x: (pos.x - ref.x), y: (pos.y - ref.y), z: (pos.z - ref.z) }
+}
+
+function getArrayLocation(turtlePos: Coordinate, chunkPos: Coordinate): number | undefined {
+  const {x, y, z} = normalize(coordToChunk(turtlePos), chunkPos);
+  if (x < -1 || 1 < x || 
+    y < -1 || 1 < y || 
+    z < -1 || 1 < z) return;
+  return (y + 1) * 9 + (z + 1) * 3 + (x + 1);
+}
+
+function reducer(state: any, action: { type: string; value: any }) {
+  switch (action.type) {
+    case "full":
+      const { turtlePos, chunks } = action.value;
+      for (let chunk of chunks) {
+        const arrLoc = getArrayLocation(turtlePos, chunk.pos);
+        if (arrLoc) state.chunks[arrLoc] = new Chunk(chunk);
+      }
+      return action.value;
+
+    case "pos":
+      
+      switch (action.value.dir) {
+        case "UP":
+          break
+        case "DOWN":
+          break
+        case "LEFT":
+          break
+        case "RIGHT":
+          break
+        case "FORWARD":
+          break
+        case "BACKWARD":
+          break
+      }
+
+    case "chunk":
+
+      return 
+  }
+}
+
 function App() {
   const [socket, setSocket] = useState(null as unknown as WebSocket);
   const [turtles, setTurtles] = useState<Turtle[]>([]);
-  const [curr, setCurr] = useState<Turtle>(EMPTY_TURTLE);
-  const [chunks, setChunks] = useState(null);
+  const [curr, setCurr] = useState(EMPTY_TURTLE);
+  const [renderinfo, dispatch] = useReducer(reducer, EMPTY_RENDERINFO);
 
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8080")
@@ -103,8 +177,18 @@ function App() {
             if (msg.turtle.id === curr.id) setCurr(EMPTY_TURTLE)
             break
 
+          case "fullchunkinfo":
+            dispatch({ type: "full", value: msg.value });
+            break
+
+          case "pos":
+            dispatch({ type: "pos", value: msg.value });
+            break
+
           case "chunk":
-            
+            dispatch({ type: "chunk", value: msg.value });
+            break
+
         }
       } catch {}
     }
@@ -130,7 +214,7 @@ function App() {
         curr={curr}
         onSelect={currSelect} />
       <main>
-        <Display chunks={chunks} />
+        <Display renderinfo={renderinfo} />
         <ControlPanel />
       </main>
     </div>

@@ -1,48 +1,32 @@
-import { useRef, useState } from "react";
-import { useFrame } from '@react-three/fiber';
-
-function Chunk(props: any) {
-    const ref = useRef()
-    
-    return (
-        <mesh {...props} ref={ref} scale={1}>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color='hotpink' />
-        </mesh>
-    )
-}
-
-function World(props: any) {
-  
-  // props.requestChunk({x: 0, y: 0, z: 0});
-  
-  return (
-    <>
-      <Chunk position={[1, 0, 0]} />
-      <Chunk position={[-1, 0, 0]} />
-    </>
-  )
-}
-
 type Face = { dir: number[], corners: number[][] }
 type Block = "grass" | "dirt" | "stone"
-type ChunkUpdate = { coords: { x: number, y: number, z: number }, data: [{ x: number, y: number, z: number, type: Block }] }
+type Coordinate = { x: number, y: number, z: number};
+type ChunkUpdate = { pos: Coordinate, data: [{ x: number, y: number, z: number, type: Block }] }
 
-class Subchunk {
+function getBlockId(block: Block) {
+  switch (block) {
+    case "grass":
+      return 1;
+    case "dirt":
+      return 2;
+    case "stone":
+      return 3;
+    default:
+      return 0;
+  }
+}
+
+class Chunk {
   static chunkLen   = 16;
   static chunkSlice = 256;
   static chunkSize  = 4096;
   static faces: Face[];
-  x: number;
-  y: number;
-  z: number;
+  pos: Coordinate;
   chunk: Uint8Array;
 
-  constructor ({ coords, data }: ChunkUpdate) {
-    this.x = coords.x;
-    this.y = coords.y;
-    this.z = coords.z;
-    this.chunk = new Uint8Array(Subchunk.chunkSize);
+  constructor ({ pos, data }: ChunkUpdate) {
+    this.pos = pos;
+    this.chunk = new Uint8Array(Chunk.chunkSize);
     for (let block of data) {
       const { x, y, z, type } = block;
       this.setVoxel(x, y, z, type);
@@ -54,7 +38,7 @@ class Subchunk {
     const voxelY = y & 0xf;
     const voxelZ = z & 0xf;
     const voxelOffset =
-      voxelY * Subchunk.chunkSlice + voxelZ * Subchunk.chunkLen + voxelX;
+      voxelY * Chunk.chunkSlice + voxelZ * Chunk.chunkLen + voxelX;
     return voxelOffset;
   }
 
@@ -67,12 +51,13 @@ class Subchunk {
     return this.chunk[this.calcVoxelOffset(x, y, z)];
   }
 
-  setVoxel(x: number, y: number, z: number, v) {
-    this.chunk[this.calcVoxelOffset(x, y, z)] = v;
+  setVoxel(x: number, y: number, z: number, v: Block) {
+    const blockId = getBlockId(v);
+    this.chunk[this.calcVoxelOffset(x, y, z)] = blockId;
   }
 
   calcChunkGeometryData() {
-    const cellSize = Subchunk.chunkLen;
+    const cellSize = Chunk.chunkLen;
     const positions = [];
     const normals = [];
     const indices = [];
@@ -88,7 +73,7 @@ class Subchunk {
           const voxelX = startX + x;
           const voxel = this.getVoxel(voxelX, voxelY, voxelZ);
           if (voxel) {
-            for (const { dir, corners } of Subchunk.faces) {
+            for (const { dir, corners } of Chunk.faces) {
               const neighbor = this.getVoxel(
                 voxelX + dir[0],
                 voxelY + dir[1],
@@ -111,7 +96,7 @@ class Subchunk {
   }
 }
 
-Subchunk.faces = [
+Chunk.faces = [
   {
     // left
     dir: [-1, 0, 0],
@@ -174,4 +159,4 @@ Subchunk.faces = [
   },
 ];
 
-export default World;
+export default Chunk;
