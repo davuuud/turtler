@@ -43,7 +43,7 @@ class Chunk {
   }
 
   voxelInChunk(x: number, y: number, z: number) {
-    return (x >> 4) === this.x && (y >> 4) === this.y && (z >> 4) === this.z;
+    return (x >> 4) === this.pos.x && (y >> 4) === this.pos.y && (z >> 4) === this.pos.z;
   }
 
   getVoxel(x: number, y: number, z: number) {
@@ -61,9 +61,9 @@ class Chunk {
     const positions = [];
     const normals = [];
     const indices = [];
-    const startX = this.x * cellSize;
-    const startY = this.y * cellSize;
-    const startZ = this.z * cellSize;
+    const startX = this.pos.x * cellSize;
+    const startY = this.pos.y * cellSize;
+    const startZ = this.pos.z * cellSize;
 
     for (let y = 0; y < cellSize; y++) {
       const voxelY = startY + y;

@@ -40,17 +40,15 @@ function Chunkr(props: any) {
 }
 
 function World(props: any) {
-
-return (
-  <>
-    <Chunkr position={[1, 0, 0]} />
-    <Chunkr position={[-1, 0, 0]} />
-  </>
-)
+  return (
+    <>
+      <Chunkr position={[1, 0, 0]} />
+      <Chunkr position={[-1, 0, 0]} />
+    </>
+  )
 }
 
 function Display(props: any) {
-
   return (
     <Canvas>
       <ambientLight />
@@ -111,18 +109,18 @@ function getArrayLocation(turtlePos: Coordinate, chunkPos: Coordinate): number |
 }
 
 function reducer(state: any, action: { type: string; value: any }) {
+  const { turtlePos, chunks, dir } = action.value;
   switch (action.type) {
-    case "full":
-      const { turtlePos, chunks } = action.value;
+    case "full": /* Server Msg: { type: "fullchunkinfo", value: { turtlePos: {}, chunks: [] } */
+      const newChunks: Chunk[] = [];
       for (let chunk of chunks) {
         const arrLoc = getArrayLocation(turtlePos, chunk.pos);
         if (arrLoc) state.chunks[arrLoc] = new Chunk(chunk);
       }
-      return action.value;
+      return { turtlePos: action.value.turtlePos, chunks: newChunks };  
 
-    case "pos":
-      
-      switch (action.value.dir) {
+    case "pos": /* Server Msg: { type: "pos", value: { turtlePos: {}, dir: ... } */
+      switch (dir) {
         case "UP":
           break
         case "DOWN":
@@ -138,8 +136,8 @@ function reducer(state: any, action: { type: string; value: any }) {
       }
 
     case "chunk":
-
       return 
+
   }
 }
 
