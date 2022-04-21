@@ -3,6 +3,7 @@ import logo from './logo.png'
 import './App.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeftRotate, faArrowLeft, faArrowUp, faArrowDown, faArrowRight, faArrowRightRotate } from '@fortawesome/free-solid-svg-icons'
+import * as THREE from "three";
 import { Canvas } from '@react-three/fiber'
 import Chunk from './Chunk'
 
@@ -28,32 +29,67 @@ function ControlPanel() {
   )
 }
 
-function Chunkr(props: any) {
+function Subchunk(props: any) {
+  const ref = useRef()
+  const { positions, normals, indices } = props.c.calcChunkGeometryData();
+  const geometry = new THREE.BufferGeometry();
+  const material = new THREE.MeshLambertMaterial({ color: "green" });
+
+  const positionNumComponents = 3;
+  const normalNumComponents = 3;
+  geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(
+      new Float32Array(positions),
+      positionNumComponents
+    )
+  );
+  geometry.setAttribute(
+    "normal",
+    new THREE.BufferAttribute(new Float32Array(normals), normalNumComponents)
+  );
+  geometry.setIndex(indices);
+  
+  return (
+      <mesh {...props.position} ref={ref} scale={1} geometry={geometry} material={material} />
+  )
+}
+
+function World(props: any) {
+  const chunkList = props.chunks.map((c: Chunk) => {
+    const ncp = normalize(props.turtleChunkPos, c.pos)
+    const position = [ncp.x, ncp.y, ncp.z];
+    return <Subchunk chunk={c} position={position} />
+  })
+
+  return (
+    <>
+      {chunkList}
+    </>
+  )
+}
+
+function Turtle(props: any) {
   const ref = useRef()
   
   return (
       <mesh {...props} ref={ref} scale={1}>
           <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color='hotpink' />
+          <meshStandardMaterial color='yellow' />
       </mesh>
   )
 }
 
-function World(props: any) {
-  return (
-    <>
-      <Chunkr position={[1, 0, 0]} />
-      <Chunkr position={[-1, 0, 0]} />
-    </>
-  )
-}
+function Display({ renderinfo }: { renderinfo: RenderInfo }) {
+  const turtlePos = [renderinfo.turtlePos.x, renderinfo.turtlePos.y, renderinfo.turtlePos.z];
+  const turtleChunkPos = coordToChunk(renderinfo.turtlePos);
 
-function Display(props: any) {
   return (
     <Canvas>
       <ambientLight />
       <pointLight position={[0, 0, 0]} />
-      <World blockList={props.blocks} />
+      <Turtle position={turtlePos} />
+      <World turtleChunkPos={turtleChunkPos} chunks={renderinfo.chunks} />
     </Canvas>
   )
 }
@@ -109,35 +145,88 @@ function getArrayLocation(turtlePos: Coordinate, chunkPos: Coordinate): number |
 }
 
 function reducer(state: any, action: { type: string; value: any }) {
-  const { turtlePos, chunks, dir } = action.value;
+  const { turtlePos, chunks, dir, pos, data } = action.value;
+  const newChunks: Chunk[] = [];
   switch (action.type) {
     case "full": /* Server Msg: { type: "fullchunkinfo", value: { turtlePos: {}, chunks: [] } */
-      const newChunks: Chunk[] = [];
       for (let chunk of chunks) {
         const arrLoc = getArrayLocation(turtlePos, chunk.pos);
-        if (arrLoc) state.chunks[arrLoc] = new Chunk(chunk);
+        if (arrLoc) newChunks[arrLoc] = new Chunk(chunk);
       }
-      return { turtlePos: action.value.turtlePos, chunks: newChunks };  
+      return { turtlePos: turtlePos, chunks: newChunks };  
 
     case "pos": /* Server Msg: { type: "pos", value: { turtlePos: {}, dir: ... } */
+      if (coordToChunk(state.turtlePos) === coordToChunk(turtlePos)) return { turtlePos: turtlePos, chunks: state.chunks }
       switch (dir) {
         case "UP":
+          for (let i = 0; i < 18; ++i) {
+            newChunks[i] = chunks[i + 9];
+          }
           break
         case "DOWN":
+          for (let i = 26; i > 8; --i) {
+            newChunks[i] = chunks[i - 9];
+          }
           break
         case "LEFT":
+          for (let i = 1; i < 27; i+=3) {
+            for (let j = 0; j < 2; ++j) {
+              const c = i + j;
+              newChunks[c] = chunks[c - 1];
+            }
+          }
           break
         case "RIGHT":
+          for (let i = 0; i < 27; i+=3) {
+            for (let j = 0; j < 2; ++j) {
+              const c = i + j;
+              newChunks[c] = chunks[c + 1];
+            }
+          }
           break
         case "FORWARD":
+          for (let i = 3; i < 27; i+=9) {
+            for (let j = 0; j < 6; ++j) {
+              const c = i + j;
+              newChunks[c] = chunks[c - 3];
+            }
+          }
           break
         case "BACKWARD":
+          for (let i = 0; i < 27; i+=9) {
+            for (let j = 0; j < 6; ++j) {
+              const c = i + j;
+              newChunks[c] = chunks[c + 3];
+            }
+          }
           break
       }
+      return { turtlePos: turtlePos, chunks: newChunks };
 
-    case "chunk":
-      return 
+    case "chunk": /* Server Msg: { type: "chunk", value: { pos: {}, data: [] } } */
+      const arrLoc = getArrayLocation(turtlePos, pos);
+      if (arrLoc) {
+        const updatedChunks = state.chunks.slice(0);
+        updatedChunks[arrLoc] = new Chunk({ pos, data });
+        return { turtlePos: state.turtlePos, chunks: updatedChunks }
+      }
+      return state
+    
+    default:
+      return state;
+  }
+}
 
+function requestMissingChunks(turtleChunkPos: Coordinate, chunks: Chunk[], socket: WebSocket) {
+  for (let y = -1; y < 2; ++y) {
+    for (let z = -1; z < 2; ++z) {
+      for (let x = -1; x < 2; ++x) {
+        const i = (y + 1) * 9 + (z + 1) * 3 + (x + 1);
+        if (!chunks[i]) {
+          socket.send(JSON.stringify({ type: "get", value: "chunk", pos: { x: (turtleChunkPos.x + x), y: (turtleChunkPos.y + y), z: (turtleChunkPos.z + z) } }));
+        }
+      }
+    }
   }
 }
 
@@ -152,7 +241,7 @@ function App() {
 
     socket.onopen = event => {
       console.log("Connection established")
-      socket.send(JSON.stringify({type: "get", value: "turtles"}))
+      socket.send(JSON.stringify({ type: "get", value: "turtles" }))
     }
     
     socket.onmessage = event => {
@@ -181,12 +270,12 @@ function App() {
 
           case "pos":
             dispatch({ type: "pos", value: msg.value });
+            requestMissingChunks(renderinfo?.turtlePos, renderinfo?.chunks, socket);
             break
 
           case "chunk":
             dispatch({ type: "chunk", value: msg.value });
             break
-
         }
       } catch {}
     }
