@@ -122,10 +122,11 @@ main {
   position: relative;
 }
 
-#c {
+canvas {
    width: 100%;
    height: 100%;
    display: block;
+   touch-action: none;
 }
 
 .ControlPanel {

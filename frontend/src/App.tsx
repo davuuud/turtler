@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeftRotate, faArrowLeft, faArrowUp, faArrowDown, faArrowRight, faArrowRightRotate } from '@fortawesome/free-solid-svg-icons'
 import * as THREE from "three";
 import { Canvas } from '@react-three/fiber'
+import { OrbitControls } from '@react-three/drei'
 import Chunk from './Chunk'
 
 type Turtle = { id: number, name: string }
@@ -88,6 +89,7 @@ function Display({ renderinfo }: { renderinfo: RenderInfo }) {
     <Canvas>
       <ambientLight />
       <pointLight position={[0, 0, 0]} />
+      <OrbitControls />
       <Turtle position={turtlePos} />
       <World turtleChunkPos={turtleChunkPos} chunks={renderinfo.chunks} />
     </Canvas>
@@ -233,7 +235,7 @@ function requestMissingChunks(turtleChunkPos: Coordinate, chunks: Chunk[], socke
 function App() {
   const [socket, setSocket] = useState(null as unknown as WebSocket);
   const [turtles, setTurtles] = useState<Turtle[]>([]);
-  const [curr, setCurr] = useState(EMPTY_TURTLE);
+  const [curr, setCurr] = useState(null as unknown as Turtle);
   const [renderinfo, dispatch] = useReducer(reducer, EMPTY_RENDERINFO);
 
   useEffect(() => {
@@ -301,7 +303,7 @@ function App() {
         curr={curr}
         onSelect={currSelect} />
       <main>
-        <Display renderinfo={renderinfo} />
+        {curr && <Display renderinfo={renderinfo} />}
         <ControlPanel />
       </main>
     </div>
