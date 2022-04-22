@@ -21,8 +21,6 @@ import { OrbitControls } from "@react-three/drei";
 import Chunk from "./Chunk";
 
 type Turtle = { id: number; name: string };
-const EMPTY_TURTLE: Turtle = { id: 0, name: "" };
-
 type Coordinate = [x: number, y: number, z: number];
 type RenderInfo = { turtlePos: Coordinate; chunks: Chunk[] };
 const EMPTY_RENDERINFO: RenderInfo = { turtlePos: [0, 0, 0], chunks: [] };
@@ -380,8 +378,11 @@ function App() {
       </header>
       <TurtleSelector turtles={turtles} curr={curr} onSelect={currSelect} />
       <main>
-        {curr && <Display renderinfo={renderinfo} />}
-        <ControlPanel />
+        {curr && 
+        <>
+          <Display renderinfo={renderinfo} />
+          <ControlPanel />
+        </>}
       </main>
     </div>
   );
