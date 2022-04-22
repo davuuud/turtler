@@ -1,6 +1,7 @@
 import {
   useEffect,
   useReducer,
+  useRef,
   useState,
 } from "react";
 import logo from "./logo.png";
@@ -292,27 +293,27 @@ function requestMissingChunks(
 }
 
 function App() {
-  const [socket, setSocket] = useState(null as unknown as WebSocket);
+  const socket = useRef<WebSocket|undefined>(undefined)
   const [turtles, setTurtles] = useState<Turtle[]>([]);
-  const [curr, setCurr] = useState(null as unknown as Turtle);
+  const [curr, setCurr] = useState<Turtle|undefined>(undefined);
   const [renderinfo, dispatch] = useReducer(reducer, EMPTY_RENDERINFO);
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8080");
+    const ws = new WebSocket("ws://localhost:8080");
 
-    socket.onopen = (event) => {
+    ws.onopen = () => {
       console.log("Connection established");
-      socket.send(JSON.stringify({ type: "get", value: "turtles" }));
+      ws.send(JSON.stringify({ type: "get", value: "turtles" }));
     };
 
-    socket.onmessage = (event) => {
+    ws.onmessage = (e) => {
       try {
-        const msg = JSON.parse(event.data);
+        const msg = JSON.parse(e.data);
         switch (msg.type) {
           case "full":
             setTurtles(msg.turtles);
             setCurr(
-              msg.turtles.find((t: Turtle) => t.id === curr.id) || EMPTY_TURTLE
+              curr && msg.turtles.find((t: Turtle) => t.id === curr.id)
             );
             break;
 
@@ -329,7 +330,7 @@ function App() {
             setTurtles((prevState) =>
               prevState.filter((t) => t.id !== msg.turtle.id)
             );
-            if (msg.turtle.id === curr.id) setCurr(EMPTY_TURTLE);
+            if (curr && msg.turtle.id === curr.id) setCurr(undefined);
             break;
 
           case "fullchunkinfo":
@@ -341,7 +342,7 @@ function App() {
             requestMissingChunks(
               renderinfo?.turtlePos,
               renderinfo?.chunks,
-              socket
+              ws
             );
             break;
 
@@ -352,19 +353,22 @@ function App() {
       } catch {}
     };
 
-    setSocket(socket);
+    socket.current = ws;
 
     return () => {
-      socket.close();
-      setSocket(null as unknown as WebSocket);
+      ws.close();
+      socket.current = undefined;
     };
   }, []);
 
   const currSelect = (turtle: Turtle) => {
     setCurr(turtle);
-    socket.send(JSON.stringify({ type: "subscribe", value: turtle }));
+    socket.current!.send(JSON.stringify({ type: "subscribe", value: turtle }));
   };
 
+  if (!socket.current) {
+    return "Loading...";
+  }
   return (
     <div className="App">
       <header>
