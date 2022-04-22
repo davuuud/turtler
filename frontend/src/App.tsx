@@ -261,6 +261,9 @@ function reducer(state: any, action: { type: string; value: any }) {
       }
       return state;
 
+    case "RESET":
+      return EMPTY_RENDERINFO;
+
     default:
       return new Error();
   }
@@ -295,6 +298,11 @@ function App() {
   const [turtles, setTurtles] = useState<Turtle[]>([]);
   const [curr, setCurr] = useState<Turtle|undefined>(undefined);
   const [renderinfo, dispatch] = useReducer(reducer, EMPTY_RENDERINFO);
+
+  useEffect(() => {
+    curr && socket && socket.current && socket.current.send(JSON.stringify({ type: "subscribe", value: curr }));
+    return () => dispatch({ type: "RESET", value: {} });
+  }, [curr]);
 
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8080");
@@ -361,7 +369,6 @@ function App() {
 
   const currSelect = (turtle: Turtle) => {
     setCurr(turtle);
-    socket.current!.send(JSON.stringify({ type: "subscribe", value: turtle }));
   };
 
   if (!socket.current) {
