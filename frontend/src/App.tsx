@@ -125,8 +125,8 @@ function Display({ renderinfo }: { renderinfo: RenderInfo }) {
   return (
     <Canvas>
       <ambientLight />
-      <pointLight position={[0, 0, 0]} />
-      <OrbitControls />
+      {/* <pointLight position={[0, 0, 0]} /> */}
+      <OrbitControls target={pos} />
       <Turtle position={pos} />
       <World turtleChunkPos={turtleChunkPos} chunks={chunks} />
     </Canvas>
